@@ -34,7 +34,7 @@ public:
     virtual Result resolver(const Graph& g, double limiteSeg) = 0;
 };
 
-// FUNCIONES DE LA PERSONA A (Jhair Cardenas) (Implementdos en datos.cpp)
+// FUNCIONES DE A (Jhair Cardenas) (Implementdos en datos.cpp)
 
 Graph cargarCSV(const std::string& archivo);               // lee nodos y arma la matriz
 Graph generarInstancia(int clientes, unsigned semilla);    // aleatoria y reproducible
@@ -42,3 +42,29 @@ void construirMatriz(Graph& g);                            // llena g.w con dist
 bool validar(const Graph& g, bool revisarTriangular, std::string& error);
 double costoRuta(const Graph& g, const std::vector<int>& ruta);
 void exportarCSV(const std::string& archivo, const std::vector<Result>& res);
+
+// CLASES DE LOS ALGORITMOS (cada método se implementa en su .cpp)
+
+// Persona B -> exactos.cpp
+class BacktrackingSolver : public ITspSolver {
+public:
+    std::string nombre() const override;
+    Result resolver(const Graph& g, double limiteSeg) override;
+};
+class HeldKarpSolver : public ITspSolver {
+public:
+    std::string nombre() const override;
+    Result resolver(const Graph& g, double limiteSeg) override;
+};
+
+// Persona C -> aproximados.cpp
+class MstDfsSolver : public ITspSolver {
+public:
+    std::string nombre() const override;
+    Result resolver(const Graph& g, double limiteSeg) override;
+};
+class NearestNeighborSolver : public ITspSolver {
+public:
+    std::string nombre() const override;
+    Result resolver(const Graph& g, double limiteSeg) override;
+};
