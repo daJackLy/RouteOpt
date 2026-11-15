@@ -1,0 +1,5 @@
+algoritmo,costo,tiempoMs,memoriaBytes,estados,desviacion,terminoPorTiempo,ruta
+Backtracking con poda,3236.6334,39.5258,107.0000,258957,0.0000,0,0 4 1 9 7 6 3 5 10 2 8 0
+Held-Karp,3236.6334,4.6139,122880.0000,5130,0.0000,0,0 8 2 10 5 3 6 7 9 1 4 0
+MST + DFS,3815.0712,0.0107,231.0000,253,17.8716,0,0 8 1 4 9 7 3 5 10 6 2 0
+Nearest Neighbor,4239.1388,0.0027,55.0000,100,30.9737,0,0 8 2 6 3 7 9 1 4 5 10 0
