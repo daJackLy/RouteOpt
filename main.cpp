@@ -5,6 +5,27 @@
 #include <limits>
 #include <map>
 #include <string>
+#include <fstream>
+
+// Límites de tamaño usados por el piloto y por la recomendación (salen de los resultados del piloto):
+// backtracking viable hasta 12 clientes, Held-Karp hasta 18.
+const int LIMITE_BACKTRACKING = 12;
+const int LIMITE_HELD_KARP = 20;
+
+// Recomienda una estrategia según el número de clientes y la precisión requerida.
+std::string recomendar(int clientes, bool necesitaOptimo) {
+    if (clientes <= LIMITE_BACKTRACKING)
+        return "Held-Karp: da el optimo en pocos milisegundos. Backtracking con poda tambien sirve "
+               "como referencia y casi no usa memoria.";
+    if (clientes <= LIMITE_HELD_KARP)
+        return "Held-Karp: da el optimo, pero su memoria crece como n * 2^n. "
+               "El backtracking ya es demasiado lento.";
+    if (necesitaOptimo)
+        return "No hay metodo exacto practico en este tamano. Use un aproximado y acepte la desviacion; "
+               "Held-Karp necesitaria cientos de MB.";
+    return "Nearest Neighbor o MST + DFS: ejecute ambos y quedese con el de menor costo. "
+           "Use MST + DFS si necesita garantia (costo <= 2 x optimo, con distancias metricas).";
+}
 
 // Desviación porcentual respecto a una referencia (óptimo o mejor solución conocida)
 double desviacion(double costo, double referencia) {
@@ -18,8 +39,8 @@ std::vector<Result> compararEnInstancia(const Graph& g) {
     int clientes = g.n() - 1;
     std::vector<Result> res;
 
-    if (clientes <= 12) { BacktrackingSolver bt; res.push_back(bt.resolver(g, 30.0)); }
-    if (clientes <= 18) { HeldKarpSolver hk;     res.push_back(hk.resolver(g, 60.0)); }
+    if (clientes <= LIMITE_BACKTRACKING) { BacktrackingSolver bt; res.push_back(bt.resolver(g, 30.0)); }
+    if (clientes <= LIMITE_HELD_KARP) { HeldKarpSolver hk;     res.push_back(hk.resolver(g, 60.0)); }
     MstDfsSolver mst;         res.push_back(mst.resolver(g, 60.0));
     NearestNeighborSolver nn; res.push_back(nn.resolver(g, 60.0));
 
@@ -61,9 +82,13 @@ struct Acum {
 
 // Simulación piloto: tabla de promedios por tamaño y exportación a CSV
 void piloto() {
-    const int INSTANCIAS = 5;      // instancias por tamaño (en el informe final usaremos 10)
-    int tamanos[] = {5, 8, 10, 12, 15, 18, 50, 200, 1000};
+    const int INSTANCIAS = 10;      // instancias por tamaño
+    int tamanos[] = {5, 6, 8, 10, 12, 13, 15, 18, 20, 25, 50, 100, 200, 500, 1000};
     std::vector<Result> todos;     // todos los resultados individuales, para exportar
+
+    std::ofstream prom("promedios_piloto.csv");
+    prom << std::fixed << std::setprecision(4);
+    prom << "clientes,algoritmo,costo,tiempoMs,estados,memoriaKB,desviacion\n";
 
     std::cout << "\n=== PILOTO: promedio de " << INSTANCIAS
               << " instancias por tamano (coordenadas en [0,1000]^2) ===\n";
@@ -89,7 +114,7 @@ void piloto() {
         }
 
         std::cout << "\n" << cl << " clientes";
-        if (cl > 18) std::cout << "  (solo aproximados; desviacion respecto a la mejor solucion conocida)\n";
+        if (cl > LIMITE_HELD_KARP) std::cout << "  (solo aproximados; desviacion respecto a la mejor solucion conocida)\n";
         else         std::cout << "  (desviacion respecto al optimo)\n";
         std::cout << std::left << std::setw(24) << "Algoritmo" << std::right
                   << std::setw(12) << "Costo" << std::setw(12) << "Tiempo(ms)"
@@ -106,12 +131,16 @@ void piloto() {
                       << std::setw(10) << a.desv / a.n;
             if (a.cortados > 0) std::cout << "  (" << a.cortados << " cortados por tiempo)";
             std::cout << "\n";
+            prom << cl << "," << par.first << "," << a.costo / a.n << "," << a.tiempo / a.n << ","
+            << (long long)(a.estados / a.n) << "," << a.memoria / a.n / 1024.0 << ","
+            << a.desv / a.n << "\n";
         }
     }
     std::cout << std::defaultfloat;
 
     exportarCSV("resultados_piloto.csv", todos);
     std::cout << "\nResultados individuales exportados a resultados_piloto.csv\n";
+    std::cout << "Promedios exportados a promedios_piloto.csv\n";
 }
 
 int main() {
@@ -125,6 +154,7 @@ int main() {
                   << "2) Generar instancia aleatoria\n"
                   << "3) Ejecutar algoritmos sobre la instancia actual\n"
                   << "4) Piloto (tabla comparativa y exportacion a CSV)\n"
+                  << "5) Recomendar estrategia para la instancia actual\n"
                   << "0) Salir\n"
                   << "Opcion: ";
         if (!(std::cin >> op)) break;
@@ -170,6 +200,16 @@ int main() {
             }
         } else if (op == 4) {
             piloto();
+        } else if (op == 5) {
+            if (!hayInstancia) {
+                std::cout << "Primero cargue o genere una instancia.\n";
+            } else {
+                int opt;
+                std::cout << "Necesita la solucion optima? (1 = si, 0 = no): ";
+                if (!(std::cin >> opt)) break;
+                std::cout << "Instancia de " << g.n() - 1 << " clientes. Recomendacion: "
+                          << recomendar(g.n() - 1, opt == 1) << "\n";
+            }
         } else if (op != 0) {
             std::cout << "Opcion no valida.\n";
         }

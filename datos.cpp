@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 
 // Llena la matriz w con la distancia euclidiana entre cada par de nodos.
 // La diagonal queda en 0 (w[i][i] = 0), como se pide en el modelo del Avance 1.

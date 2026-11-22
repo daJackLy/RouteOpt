@@ -115,6 +115,5 @@ int main() {
         lineas++;
     }
     mostrar("el archivo tiene encabezado + 2 filas", lineas == 3);
-
     return 0;
 }
